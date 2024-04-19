@@ -41,16 +41,34 @@ const pool = new Pool({
 //  Now we are using command line args to pass in the month of cohort,
 //  and how many rows we want sql return to be limited by
 
-  pool.query(
-    `SELECT students.id as student_id, students.name as student_name, cohorts.name as cohort_name
-    FROM students
-    JOIN cohorts ON cohorts.id = cohort_id
-    WHERE cohorts.name LIKE '%${process.argv[2]}%'
-    LIMIT ${process.argv[3]|| 5};`)
-  .then((res) => {
-    res.rows.forEach((user) => {
-      console.log(
-        `${user.student_name} has an id of ${user.student_id} and was in the ${user.cohort_name} cohort`);
-    });
-  })
-  .catch((err) => console.error("query error", err.stack));
+// pool.query(
+//   `SELECT students.id as student_id, students.name as student_name, cohorts.name as cohort_name
+//   FROM students
+//   JOIN cohorts ON cohorts.id = cohort_id
+//   WHERE cohorts.name LIKE '%${process.argv[2]}%'
+//   LIMIT ${process.argv[3]|| 5};`)
+// .then((res) => {
+//   res.rows.forEach((user) => {
+//     console.log(
+//       `${user.student_name} has an id of ${user.student_id} and was in the ${user.cohort_name} cohort`);
+//   });
+// })
+// .catch((err) => console.error("query error", err.stack));
+
+//------------------------------------------------------------------------------
+//  Now with parameterized queries to guard against malicious SQL injection
+//  Reminder - when passing args in the array, they need to correspond to the order you added them in the SQL statement
+
+pool.query(
+  `SELECT students.id as student_id, students.name as student_name, cohorts.name as cohort_name
+  FROM students
+  JOIN cohorts ON cohorts.id = cohort_id
+  WHERE cohorts.name LIKE '$1'
+  LIMIT $2;`, [process.argv[2], process.argv[3] || 5])
+.then((res) => {
+  res.rows.forEach((user) => {
+    console.log(
+      `${user.student_name} has an id of ${user.student_id} and was in the ${user.cohort_name} cohort`);
+  });
+})
+.catch((err) => console.error("query error", err.stack));
